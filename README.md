@@ -1,7 +1,7 @@
 
 # PSAppDeployToolkit.Sleep
 
-A PowerShell module that prevents Windows systems from sleeping during software deployments. I created this when we had end-of-life software that required immediate rollout with mandatory reboots - couldn't disrupt production during work hours, so this let users just leave their PC on overnight and wake up to a completed installation.
+An extension to PSAppDeployToolkit that prevents Windows systems from sleeping during software deployments. I created this when we had end-of-life software that required immediate rollout with mandatory reboots - couldn't disrupt production during work hours, so this let users just leave their PC on overnight and wake up to a completed installation.
 
 ## Installation
 
