@@ -79,7 +79,7 @@ function Block-ADTSleep {
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function Start: ${CmdletName}" -Severity 1 -Source ${CmdletName}
+            Write-ADTLogEntry -Message "Function Start: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
     Process {
@@ -87,13 +87,13 @@ function Block-ADTSleep {
             # Check if sleep prevention is already active
             if ($Script:ADTSleepBlocked) {
                 if ($WriteLog) {
-                    Write-ADTLogEntry -Message "Sleep prevention is already active." -Severity 2 -Source ${CmdletName}
+                    Write-ADTLogEntry -Message "Sleep prevention is already active." -Severity Warning -Source ${CmdletName}
                 }
                 return
             }
             
             if ($WriteLog) {
-                Write-ADTLogEntry -Message "Activating sleep prevention to prevent system sleep during deployment..." -Severity 1 -Source ${CmdletName}
+                Write-ADTLogEntry -Message "Activating sleep prevention to prevent system sleep during deployment..." -Severity Info -Source ${CmdletName}
             }
             
             # Define the Windows API SetThreadExecutionState function
@@ -103,13 +103,13 @@ function Block-ADTSleep {
                 # Keep both system and display active
                 $executionState = $ES_CONTINUOUS + $ES_SYSTEM_REQUIRED + $ES_DISPLAY_REQUIRED 
                 if ($WriteLog) {
-                    Write-ADTLogEntry -Message "Preventing system sleep and keeping display on..." -Severity 1 -Source ${CmdletName}
+                    Write-ADTLogEntry -Message "Preventing system sleep and keeping display on..." -Severity Info -Source ${CmdletName}
                 }
             } else {
                 # Keep system active, allow display to turn off
                 $executionState = $ES_CONTINUOUS + $ES_SYSTEM_REQUIRED
                 if ($WriteLog) {
-                    Write-ADTLogEntry -Message "Preventing system sleep, allowing display to turn off..." -Severity 1 -Source ${CmdletName}
+                    Write-ADTLogEntry -Message "Preventing system sleep, allowing display to turn off..." -Severity Info -Source ${CmdletName}
                 }
             }
             
@@ -120,21 +120,21 @@ function Block-ADTSleep {
             $Script:ADTSleepBlocked = $true
             
             if ($WriteLog) {
-                Write-ADTLogEntry -Message "Sleep prevention activated successfully. System will not sleep until deployment completes." -Severity 1 -Source ${CmdletName}
-                Write-ADTLogEntry -Message "Note: Sleep prevention status can be verified with command: powercfg /requests" -Severity 1 -Source ${CmdletName}
+                Write-ADTLogEntry -Message "Sleep prevention activated successfully. System will not sleep until deployment completes." -Severity Info -Source ${CmdletName}
+                Write-ADTLogEntry -Message "Note: Sleep prevention status can be verified with command: powercfg /requests" -Severity Info -Source ${CmdletName}
             }
         }
         catch {
             if ($WriteLog) {
-                Write-ADTLogEntry -Message "Failed to activate sleep prevention. Error: $($_.Exception.Message)" -Severity 3 -Source ${CmdletName}
+                Write-ADTLogEntry -Message "Failed to activate sleep prevention. Error: $($_.Exception.Message)" -Severity Error -Source ${CmdletName}
             }
-            Write-ADTLogEntry -Message "Failed to activate sleep prevention. Error: $($_.Exception.Message)" -Severity 3 -Source ${CmdletName} -WriteHost $false
+            Write-ADTLogEntry -Message "Failed to activate sleep prevention. Error: $($_.Exception.Message)" -Severity Error -Source ${CmdletName}
             throw "Failed to activate sleep prevention: $($_.Exception.Message)"
         }
     }
     End {
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function End: ${CmdletName}" -Severity 1 -Source ${CmdletName}
+            Write-ADTLogEntry -Message "Function End: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
 }
@@ -178,7 +178,7 @@ function Unblock-ADTSleep {
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function Start: ${CmdletName}" -Severity 1 -Source ${CmdletName}
+            Write-ADTLogEntry -Message "Function Start: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
     Process {
@@ -186,13 +186,13 @@ function Unblock-ADTSleep {
             # Check if sleep prevention is active
             if (-not $Script:ADTSleepBlocked) {
                 if ($WriteLog) {
-                    Write-ADTLogEntry -Message "Sleep prevention is not currently active." -Severity 2 -Source ${CmdletName}
+                    Write-ADTLogEntry -Message "Sleep prevention is not currently active." -Severity Warning -Source ${CmdletName}
                 }
                 return
             }
             
             if ($WriteLog) {
-                Write-ADTLogEntry -Message "Deactivating sleep prevention and restoring normal power management..." -Severity 1 -Source ${CmdletName}
+                Write-ADTLogEntry -Message "Deactivating sleep prevention and restoring normal power management..." -Severity Info -Source ${CmdletName}
             }
             
             # Ensure the Windows API type is available (may already be loaded from Start function)
@@ -208,20 +208,20 @@ function Unblock-ADTSleep {
             $Script:ADTSleepBlocked = $false
             
             if ($WriteLog) {
-                Write-ADTLogEntry -Message "Sleep prevention deactivated successfully. Normal power management restored." -Severity 1 -Source ${CmdletName}
+                Write-ADTLogEntry -Message "Sleep prevention deactivated successfully. Normal power management restored." -Severity Info -Source ${CmdletName}
             }
         }
         catch {
             if ($WriteLog) {
-                Write-ADTLogEntry -Message "Failed to deactivate sleep prevention. Error: $($_.Exception.Message)" -Severity 3 -Source ${CmdletName}
+                Write-ADTLogEntry -Message "Failed to deactivate sleep prevention. Error: $($_.Exception.Message)" -Severity Error -Source ${CmdletName}
             }
-            Write-ADTLogEntry -Message "Failed to deactivate sleep prevention. Error: $($_.Exception.Message)" -Severity 3 -Source ${CmdletName} -WriteHost $false
+            Write-ADTLogEntry -Message "Failed to deactivate sleep prevention. Error: $($_.Exception.Message)" -Severity Error -Source ${CmdletName}
             throw "Failed to deactivate sleep prevention: $($_.Exception.Message)"
         }
     }
     End {
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function End: ${CmdletName}" -Severity 1 -Source ${CmdletName}
+            Write-ADTLogEntry -Message "Function End: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
 }
@@ -262,7 +262,7 @@ function Get-ADTSleepStatus {
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function Start: ${CmdletName}" -Severity 1 -Source ${CmdletName}
+            Write-ADTLogEntry -Message "Function Start: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
     Process {
@@ -275,22 +275,22 @@ function Get-ADTSleepStatus {
             
             if ($WriteLog) {
                 $statusMessage = if ($status.IsActive) { "Sleep prevention is ACTIVE" } else { "Sleep prevention is INACTIVE" }
-                Write-ADTLogEntry -Message "$statusMessage for process ID $($status.ProcessId)" -Severity 1 -Source ${CmdletName}
-                Write-ADTLogEntry -Message "To verify system power requests, run: $($status.VerificationCommand)" -Severity 1 -Source ${CmdletName}
+                Write-ADTLogEntry -Message "$statusMessage for process ID $($status.ProcessId)" -Severity Info -Source ${CmdletName}
+                Write-ADTLogEntry -Message "To verify system power requests, run: $($status.VerificationCommand)" -Severity Info -Source ${CmdletName}
             }
             
             return $status
         }
         catch {
             if ($WriteLog) {
-                Write-ADTLogEntry -Message "Failed to get sleep prevention status. Error: $($_.Exception.Message)" -Severity 3 -Source ${CmdletName}
+                Write-ADTLogEntry -Message "Failed to get sleep prevention status. Error: $($_.Exception.Message)" -Severity Error -Source ${CmdletName}
             }
             throw "Failed to get sleep prevention status: $($_.Exception.Message)"
         }
     }
     End {
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function End: ${CmdletName}" -Severity 1 -Source ${CmdletName}
+            Write-ADTLogEntry -Message "Function End: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
 }
