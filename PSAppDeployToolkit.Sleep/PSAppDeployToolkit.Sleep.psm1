@@ -18,10 +18,19 @@ This module is imported by the Invoke-AppDeployToolkit.ps1 script which is used 
 # Set strict error handling across entire module.
 $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop
 $ProgressPreference = [System.Management.Automation.ActionPreference]::SilentlyContinue
-Set-StrictMode -Version 1
+Set-StrictMode -Version 3
 
 # Global variable to track sleep prevention state
 $Script:ADTSleepBlocked = $false
+
+# ES_CONTINUOUS (0x80000000) = 2147483648 - Informs system that state should remain in effect until next call
+# ES_SYSTEM_REQUIRED (0x00000001) = 1 - Forces system to be in working state by resetting system idle timer
+# ES_DISPLAY_REQUIRED (0x00000002) = 2 - Forces display to be on by resetting display idle timer
+
+# Global variables for execution state flags
+$Script:ES_CONTINUOUS = 2147483648
+$Script:ES_SYSTEM_REQUIRED = 1
+$Script:ES_DISPLAY_REQUIRED = 2
 
 ##*===============================================
 ##* MARK: FUNCTION LISTINGS
@@ -34,11 +43,13 @@ function Block-ADTSleep {
     
     .DESCRIPTION
         Prevents the system from entering sleep mode during deployment processes.
-        Uses Windows SetThreadExecutionState API with ES_CONTINUOUS, ES_SYSTEM_REQUIRED, 
-        and ES_AWAYMODE_REQUIRED flags.
+        Uses Windows SetThreadExecutionState API with ES_CONTINUOUS and ES_SYSTEM_REQUIRED
     
     .PARAMETER WriteLog
         Write function activity to the log file. Default is: $true.
+
+    .PARAMETER KeepDisplaOn
+        Forces display to be turned on. Default is normal system behavior.
     
     .EXAMPLE
         Block-ADTSleep
@@ -51,12 +62,16 @@ function Block-ADTSleep {
     .NOTES
         - Sleep prevention will automatically end when the PowerShell process terminates
         - Can be manually stopped using Unblock-ADTSleep
-        - Status can be verified with: powercfg /requests
+
+    .OUTPUTS
+        None
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [bool]$WriteLog = $true
+        [bool]$WriteLog = $true,
+        [Parameter(Mandatory = $false)]
+        [switch]$KeepDisplayOn
     )
     
     Begin {
@@ -83,23 +98,16 @@ function Block-ADTSleep {
             
             # Define the Windows API SetThreadExecutionState function
             Add-Type -MemberDefinition '[DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)] public static extern void SetThreadExecutionState(uint esFlags);' -Name System -Namespace Win32 -ErrorAction SilentlyContinue
-            
-            # Set execution state flags:
-            # ES_CONTINUOUS (0x80000000) = 2147483648 - Informs system that state should remain in effect until next call
-            # ES_SYSTEM_REQUIRED (0x00000001) = 1 - Forces system to be in working state by resetting system idle timer
-            # ES_DISPLAY_REQUIRED (0x00000002) = 2 - Forces display to be on by resetting display idle timer
-            
+                
             if ($KeepDisplayOn) {
                 # Keep both system and display active
-                # ES_CONTINUOUS + ES_SYSTEM_REQUIRED + ES_DISPLAY_REQUIRED = 2147483648 + 1 + 2 = 2147483651
-                $executionState = 2147483651
+                $executionState = $ES_CONTINUOUS + $ES_SYSTEM_REQUIRED + $ES_DISPLAY_REQUIRED 
                 if ($WriteLog) {
                     Write-ADTLogEntry -Message "Preventing system sleep and keeping display on..." -Severity 1 -Source ${CmdletName}
                 }
             } else {
                 # Keep system active, allow display to turn off
-                # ES_CONTINUOUS + ES_SYSTEM_REQUIRED = 2147483648 + 1 = 2147483649
-                $executionState = 2147483649
+                $executionState = $ES_CONTINUOUS + $ES_SYSTEM_REQUIRED
                 if ($WriteLog) {
                     Write-ADTLogEntry -Message "Preventing system sleep, allowing display to turn off..." -Severity 1 -Source ${CmdletName}
                 }
@@ -155,6 +163,9 @@ function Unblock-ADTSleep {
         - Should be called at the end of deployment processes that used Block-ADTSleep
         - Sleep prevention will also automatically end when PowerShell process terminates
         - Safe to call multiple times (will not cause errors if sleep prevention is not active)
+    
+    .OUTPUTS
+        None
     #>
     [CmdletBinding()]
     param(
@@ -163,7 +174,7 @@ function Unblock-ADTSleep {
     )
     
     Begin {
-        ## Get the name of this function and write header
+        # Get the name of this function and write header
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         
         if ($WriteLog) {
@@ -187,9 +198,8 @@ function Unblock-ADTSleep {
             # Ensure the Windows API type is available (may already be loaded from Start function)
             Add-Type -MemberDefinition '[DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)] public static extern void SetThreadExecutionState(uint esFlags);' -Name System -Namespace Win32 -ErrorAction SilentlyContinue
             
-            # Clear execution state by calling with ES_CONTINUOUS only
-            # ES_CONTINUOUS (0x80000000) = 2147483648 - This clears previous settings and restores normal behavior
-            $executionState = 2147483648
+            # Clear execution state by calling with ES_CONTINUOUS only - this clears previous settings and restores normal behavior
+            $executionState = $ES_CONTINUOUS
             
             # Call the Windows API to restore normal power management
             [Win32.System]::SetThreadExecutionState($executionState)
@@ -248,7 +258,7 @@ function Get-ADTSleepStatus {
     )
     
     Begin {
-        ## Get the name of this function and write header
+        # Get the name of this function and write header
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         
         if ($WriteLog) {

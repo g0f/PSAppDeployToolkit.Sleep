@@ -1,7 +1,7 @@
 #
 # Module manifest for module 'PSAppDeployToolkit.Sleep'
 #
-# Generated on: 06/09/2025
+# Generated on: 2025-09-08
 #
 
 @{
@@ -12,7 +12,7 @@
     ModuleVersion = '1.0.0'
 
     # Supported PSEditions
-    # CompatiblePSEditions = @()
+    CompatiblePSEditions = @('Desktop')
 
     # ID used to uniquely identify this module
     GUID = '41f8489f-8270-4993-b926-5140a631d00f'
@@ -24,13 +24,13 @@
     CompanyName = 'enbom.eu'
 
     # Copyright statement for this module
-    # Copyright = ''
+    Copyright = '(c) 2025 Simon Enbom. All rights reserved.'
 
     # Description of the functionality provided by this module
     Description = 'Sleep prevention functionality for PSAppDeployToolkit deployments.'
 
     # Minimum version of the Windows PowerShell engine required by this module
-    PowerShellVersion = '5.1.14393.0'
+    PowerShellVersion = '5.1'
 
     # Name of the Windows PowerShell host required by this module
     # PowerShellHostName = ''
@@ -42,14 +42,14 @@
     # DotNetFrameworkVersion = '4.7.2.0'
 
     # Minimum version of the common language runtime (CLR) required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
-    CLRVersion = '4.0.30319.42000'
+    #CLRVersion = ''
 
     # Processor architecture (None, X86, Amd64) required by this module
     # ProcessorArchitecture = ''
 
     # Modules that must be imported into the global environment prior to importing this module
     RequiredModules = @(
-        @{ ModuleName = 'PSAppDeployToolkit'; GUID = '8c3c366b-8606-4576-9f2d-4051144f7ca2'; ModuleVersion = '4.1.3' }
+        @{ ModuleName = 'PSAppDeployToolkit'; GUID = '8c3c366b-8606-4576-9f2d-4051144f7ca2'; ModuleVersion = '4.1.0' }
     )
 
     # Assemblies that must be loaded prior to importing this module
@@ -71,13 +71,13 @@
     FunctionsToExport = @('Block-ADTSleep', 'Unblock-ADTSleep', 'Get-ADTSleepStatus')
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-    # CmdletsToExport = ''
+    CmdletsToExport = @()
 
     # Variables to export from this module
-    # VariablesToExport = ''
+    VariablesToExport = @()
 
     # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-    # AliasesToExport = ''
+    AliasesToExport = @()
 
     # DSC resources to export from this module
     # DscResourcesToExport = @()
@@ -97,10 +97,10 @@
             # Tags = @()
 
             # A URL to the license for this module.
-            # LicenseUri = ''
+            LicenseUri = 'https://github.com/g0f/PSAppDeployToolkit.Sleep/blob/main/LICENSE'
 
             # A URL to the main website for this project.
-            # ProjectUri = ''
+            ProjectUri = 'https://github.com/g0f/PSAppDeployToolkit.Sleep/'
 
             # A URL to an icon representing this module.
             # IconUri = ''
