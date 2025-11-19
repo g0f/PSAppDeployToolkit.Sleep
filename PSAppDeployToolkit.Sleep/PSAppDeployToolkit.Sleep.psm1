@@ -79,7 +79,7 @@ function Block-ADTSleep {
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function Start: ${CmdletName}" -Severity Info -Source ${CmdletName}
+            Write-ADTLogEntry -Message "Importing function: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
     Process {
@@ -121,7 +121,6 @@ function Block-ADTSleep {
             
             if ($WriteLog) {
                 Write-ADTLogEntry -Message "Sleep prevention activated successfully. System will not sleep until deployment completes." -Severity Info -Source ${CmdletName}
-                Write-ADTLogEntry -Message "Note: Sleep prevention status can be verified with command: powercfg /requests" -Severity Info -Source ${CmdletName}
             }
         }
         catch {
@@ -134,7 +133,7 @@ function Block-ADTSleep {
     }
     End {
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function End: ${CmdletName}" -Severity Info -Source ${CmdletName}
+            Write-ADTLogEntry -Message "Exiting function: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
 }
@@ -178,7 +177,7 @@ function Unblock-ADTSleep {
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function Start: ${CmdletName}" -Severity Info -Source ${CmdletName}
+            Write-ADTLogEntry -Message "IMporting function: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
     Process {
@@ -221,7 +220,7 @@ function Unblock-ADTSleep {
     }
     End {
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function End: ${CmdletName}" -Severity Info -Source ${CmdletName}
+            Write-ADTLogEntry -Message "Exiting function: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
 }
@@ -262,7 +261,7 @@ function Get-ADTSleepStatus {
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function Start: ${CmdletName}" -Severity Info -Source ${CmdletName}
+            Write-ADTLogEntry -Message "Importing function: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
     Process {
@@ -276,7 +275,6 @@ function Get-ADTSleepStatus {
             if ($WriteLog) {
                 $statusMessage = if ($status.IsActive) { "Sleep prevention is ACTIVE" } else { "Sleep prevention is INACTIVE" }
                 Write-ADTLogEntry -Message "$statusMessage for process ID $($status.ProcessId)" -Severity Info -Source ${CmdletName}
-                Write-ADTLogEntry -Message "To verify system power requests, run: $($status.VerificationCommand)" -Severity Info -Source ${CmdletName}
             }
             
             return $status
@@ -290,7 +288,7 @@ function Get-ADTSleepStatus {
     }
     End {
         if ($WriteLog) {
-            Write-ADTLogEntry -Message "Function End: ${CmdletName}" -Severity Info -Source ${CmdletName}
+            Write-ADTLogEntry -Message "Exiting funciton: ${CmdletName}" -Severity Info -Source ${CmdletName}
         }
     }
 }
