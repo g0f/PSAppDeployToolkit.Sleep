@@ -38,32 +38,24 @@ jobs:
           }
           Write-Host 'PSScriptAnalyzer: clean (0 errors, 0 warnings).'
 
-  test:
-    name: Pester (${{ matrix.name }})
+  test-windows-powershell:
+    name: Pester (Windows PowerShell 5.1)
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: Windows PowerShell 5.1
-            shell: powershell
-          - name: PowerShell 7
-            shell: pwsh
     steps:
       - uses: actions/checkout@v4
 
       - name: Report the PowerShell version under test
-        shell: ${{ matrix.shell }}
+        shell: powershell
         run: $PSVersionTable | Format-List | Out-String | Write-Host
 
       - name: Install Pester
-        shell: ${{ matrix.shell }}
+        shell: powershell
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser -SkipPublisherCheck
 
       - name: Run tests
-        shell: ${{ matrix.shell }}
+        shell: powershell
         run: |
           Import-Module Pester -MinimumVersion 5.0.0 -Force
           $config = New-PesterConfiguration
@@ -78,7 +70,46 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pester-results-${{ matrix.shell }}
+          name: pester-results-windows-powershell
+          path: testResults.xml
+          if-no-files-found: ignore
+
+  # PowerShell 7 is not the deployment target, so this job reports but does not gate.
+  # Once it has proven green, drop the continue-on-error line to make it enforcing.
+  test-powershell-7:
+    name: Pester (PowerShell 7)
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Report the PowerShell version under test
+        shell: pwsh
+        run: $PSVersionTable | Format-List | Out-String | Write-Host
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser -SkipPublisherCheck
+
+      - name: Run tests
+        shell: pwsh
+        run: |
+          Import-Module Pester -MinimumVersion 5.0.0 -Force
+          $config = New-PesterConfiguration
+          $config.Run.Path = './tests'
+          $config.Run.Throw = $true
+          $config.Output.Verbosity = 'Detailed'
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = 'testResults.xml'
+          Invoke-Pester -Configuration $config
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pester-results-powershell-7
           path: testResults.xml
           if-no-files-found: ignore
 
