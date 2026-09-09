@@ -1,0 +1,34 @@
+# Let Git decide what is text, then apply the explicit rules below.
+* text=auto
+
+# PowerShell sources are checked out with CRLF, matching what PSAppDeployToolkit itself ships.
+# This keeps diffs against the toolkit's own files clean.
+*.ps1     text eol=crlf
+*.psm1    text eol=crlf
+*.psd1    text eol=crlf
+*.ps1xml  text eol=crlf
+*.cmd     text eol=crlf
+*.bat     text eol=crlf
+
+# Documentation, licence text and CI config use LF.
+*.md      text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.json    text eol=lf
+LICENSE   text eol=lf
+
+# Treat these as binary so Git never rewrites their bytes.
+*.dll     binary
+*.exe     binary
+*.pdb     binary
+*.cer     binary
+*.png     binary
+*.jpg     binary
+*.ico     binary
+
+# Keep the repository tidy on GitHub: don't count tests towards the language stats,
+# and exclude them from the source archives attached to releases.
+tests/**  linguist-test
+tests/**  export-ignore
+.github/** export-ignore
+.gitattributes export-ignore
