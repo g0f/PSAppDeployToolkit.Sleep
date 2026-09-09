@@ -2,6 +2,8 @@
 
 An extension to PSAppDeployToolkit that prevents Windows devices from sleeping during software deployments. I created this when we had end-of-life software that required immediate rollout with mandatory reboots — we couldn't disrupt production during work hours, so this let users just leave their PC on overnight and wake up to a completed installation.
 
+[![CI](https://github.com/g0f/PSAppDeployToolkit.Sleep/actions/workflows/ci.yml/badge.svg)](https://github.com/g0f/PSAppDeployToolkit.Sleep/actions/workflows/ci.yml)
+
 ## Installation
 
 1. Download the module files:
