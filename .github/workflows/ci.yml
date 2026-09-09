@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - 'PSAppDeployToolkit.Sleep/**'
+      - 'tests/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    paths:
+      - 'PSAppDeployToolkit.Sleep/**'
+      - 'tests/**'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: PSScriptAnalyzer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+
+      - name: Analyse
+        shell: pwsh
+        run: |
+          $findings = Invoke-ScriptAnalyzer -Path './PSAppDeployToolkit.Sleep' -Recurse -Severity Error, Warning
+          $findings += Invoke-ScriptAnalyzer -Path './tests' -Recurse -Severity Error, Warning
+          if ($findings)
+          {
+              $findings | Format-Table RuleName, Severity, ScriptName, Line, Message -AutoSize -Wrap | Out-String -Width 200 | Write-Host
+              throw "PSScriptAnalyzer reported $($findings.Count) issue(s)."
+          }
+          Write-Host 'PSScriptAnalyzer: clean (0 errors, 0 warnings).'
+
+  test:
+    name: Pester (${{ matrix.name }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows PowerShell 5.1
+            shell: powershell
+          - name: PowerShell 7
+            shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Report the PowerShell version under test
+        shell: ${{ matrix.shell }}
+        run: $PSVersionTable | Format-List | Out-String | Write-Host
+
+      - name: Install Pester
+        shell: ${{ matrix.shell }}
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser -SkipPublisherCheck
+
+      - name: Run tests
+        shell: ${{ matrix.shell }}
+        run: |
+          Import-Module Pester -MinimumVersion 5.0.0 -Force
+          $config = New-PesterConfiguration
+          $config.Run.Path = './tests'
+          $config.Run.Throw = $true
+          $config.Output.Verbosity = 'Detailed'
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = 'testResults.xml'
+          Invoke-Pester -Configuration $config
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pester-results-${{ matrix.shell }}
+          path: testResults.xml
+          if-no-files-found: ignore
+
+  import:
+    name: Import against PSAppDeployToolkit
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PSAppDeployToolkit
+        shell: powershell
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module PSAppDeployToolkit -MinimumVersion 4.1.0 -Force -Scope CurrentUser
+          "Installed PSAppDeployToolkit $((Get-Module PSAppDeployToolkit -ListAvailable | Select-Object -First 1).Version)." | Write-Host
+
+      - name: Validate the manifest
+        shell: powershell
+        run: |
+          $manifest = Test-ModuleManifest './PSAppDeployToolkit.Sleep/PSAppDeployToolkit.Sleep.psd1'
+          "Name    : $($manifest.Name)"    | Write-Host
+          "Version : $($manifest.Version)" | Write-Host
+          "Exports : $($manifest.ExportedFunctions.Keys -join ', ')" | Write-Host
+
+      - name: Import the module and confirm its command surface
+        shell: powershell
+        run: |
+          $env:PSModulePath = "$PWD;$env:PSModulePath"
+          Import-Module PSAppDeployToolkit.Sleep -Force -ErrorAction Stop
+
+          $expected = @('Block-ADTSleep', 'Get-ADTSleepStatus', 'Unblock-ADTSleep')
+          $actual = (Get-Command -Module PSAppDeployToolkit.Sleep).Name | Sort-Object
+          if (Compare-Object $expected $actual)
+          {
+              throw "Unexpected command surface: [$($actual -join ', ')]."
+          }
+
+          # Exercise a full cycle against the real toolkit rather than the test stubs.
+          Block-ADTSleep -KeepDisplayOn
+          $status = Get-ADTSleepStatus
+          if (!$status.IsActive -or !$status.SystemRequired -or !$status.DisplayRequired)
+          {
+              throw "Block-ADTSleep did not register the expected power request: $($status | Out-String)."
+          }
+          Unblock-ADTSleep
+          if ((Get-ADTSleepStatus).IsActive)
+          {
+              throw 'Unblock-ADTSleep did not release the power request.'
+          }
+          Write-Host 'Imported, exercised and released cleanly against the real toolkit.'
