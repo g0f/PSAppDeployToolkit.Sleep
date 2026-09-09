@@ -75,11 +75,9 @@ jobs:
           if-no-files-found: ignore
 
   # PowerShell 7 is not the deployment target, so this job reports but does not gate.
-  # Once it has proven green, drop the continue-on-error line to make it enforcing.
   test-powershell-7:
     name: Pester (PowerShell 7)
     runs-on: windows-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
